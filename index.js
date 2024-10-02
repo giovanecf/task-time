@@ -22,72 +22,44 @@ document
   .addEventListener("click", loadSettings);
 
 WEEK_TIME_EL.addEventListener("click", hackTime);
+/**
+ * END SETUP
+ *
+ *
+ *
+ *
+ */
 
-loadUserData();
-
-loadInterfaceElements();
+prepareForNewCycle(true);
 
 autoLoadWithGetParam();
 
-function hackTime() {
-  let time = prompt("New time in minutes:");
-
-  if (time === null || time === "" || isNaN(time)) return;
-
-  WEEK_TIME = time;
-
-  saveUserData();
-
-  loadInterfaceElements();
-}
-
-function saveSettings() {
-  const timer_value = document.querySelector("input[name='timer_value']").value;
-
-  console.log(timer_value);
-
-  TIMER_VALUE = parseInt(timer_value);
-
-  TIMER_VALUE = parseInt(timer_value);
-  saveUserData();
-  loadUserData();
+function prepareForNewCycle(first_load = false) {
   onPlayPauseHandler({}, false);
+
+  CURRENT_TIMER_IN_SECS = TIMER_VALUE * 60;
+
+  if (!first_load) saveUserData();
+
+  loadUserData();
+
   loadInterfaceElements();
 }
 
-function loadSettings() {
-  document
-    .querySelector("input[name='timer_value']")
-    .setAttribute("value", TIMER_VALUE);
-}
+function autoLoadWithGetParam() {
+  const queryString = window.location.search;
 
-function startTimer() {
-  // Update the count down every 1 second
-  var x = setInterval(function () {
-    CURRENT_TIMER_IN_SECS--;
+  const urlParams = new URLSearchParams(queryString);
 
-    // If the count down is finished, write some text
-    if (CURRENT_TIMER_IN_SECS == 0) {
-      onPlayPauseHandler();
-      WEEK_TIME = parseInt(TIMER_VALUE) + parseInt(WEEK_TIME);
-      saveUserData();
-      loadInterfaceElements();
-      alert("Congrats! +" + TIMER_VALUE + " minutes!");
-    }
+  const timer_value = urlParams.get("timer_value");
 
-    const time_text = getDisplaybleTimer(
-      parseInt(CURRENT_TIMER_IN_SECS / 60),
-      CURRENT_TIMER_IN_SECS % 60
-    );
-    TIMER_VALUE_HTML_EL.innerHTML = time_text;
-    document.title = time_text + " • task time";
-  }, 1000);
-
-  return x;
+  if (timer_value) {
+    TIMER_VALUE = parseInt(timer_value);
+    prepareForNewCycle();
+  }
 }
 
 function onPlayPauseHandler(e, status = undefined) {
-  console.log(status);
   HAS_STARTED = status === undefined ? !HAS_STARTED : status;
   if (HAS_STARTED) {
     TIMER = startTimer();
@@ -137,7 +109,38 @@ function loadInterfaceElements() {
   document.title = "task time";
 }
 
-function getDisplaybleTimer(m, s = null) {
+function startTimer() {
+  // Update the count down every 1 second
+  var x = setInterval(function () {
+    CURRENT_TIMER_IN_SECS--;
+
+    // If the count down is finished, write some text
+    if (CURRENT_TIMER_IN_SECS == 0) {
+      showCongrats();
+      collectTime();
+      prepareForNewCycle();
+    }
+
+    const time_text = getDisplaybleTimer(
+      parseInt(CURRENT_TIMER_IN_SECS / 60),
+      CURRENT_TIMER_IN_SECS % 60
+    );
+    TIMER_VALUE_HTML_EL.innerHTML = time_text;
+    document.title = time_text + " • task time";
+  }, 1000);
+
+  return x;
+}
+
+function collectTime() {
+  WEEK_TIME = parseInt(TIMER_VALUE) + parseInt(WEEK_TIME);
+}
+
+function showCongrats() {
+  alert("Congrats! +" + TIMER_VALUE + " minutes!");
+}
+
+function getDisplaybleTimer(m = null, s = null) {
   if (s) {
     if (s < 10) s = "0" + s;
   } else s = "00";
@@ -149,18 +152,30 @@ function getDisplaybleTimer(m, s = null) {
   return m + ":" + s;
 }
 
-function autoLoadWithGetParam() {
-  const queryString = window.location.search;
+function hackTime() {
+  let time = prompt("New time in minutes:");
 
-  const urlParams = new URLSearchParams(queryString);
+  if (time === null || time === "" || isNaN(time)) return;
 
-  const timer_value = urlParams.get("timer_value");
+  WEEK_TIME = time;
 
-  if (timer_value) {
-    TIMER_VALUE = parseInt(timer_value);
-    saveUserData();
-    loadUserData();
-    loadInterfaceElements();
-    onPlayPauseHandler();
-  }
+  saveUserData();
+
+  loadInterfaceElements();
 }
+
+function saveSettings() {
+  const timer_value = document.querySelector("input[name='timer_value']").value;
+
+  TIMER_VALUE = parseInt(timer_value);
+
+  prepareForNewCycle();
+}
+
+function loadSettings() {
+  document
+    .querySelector("input[name='timer_value']")
+    .setAttribute("value", TIMER_VALUE);
+}
+
+console.log("v1.0");
