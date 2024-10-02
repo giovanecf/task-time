@@ -11,6 +11,8 @@ let MONTH_TIME = 0;
 let YEAR_TIME = 0;
 let HAS_STARTED = false;
 let TIMER = null;
+const CURRENT_WEEK = getWeekOfYear(new Date());
+const CURRENT_MONTH = new Date().getMonth().toString();
 
 PLAY_PAUSE_BUTTON_EL.addEventListener("click", onPlayPauseHandler);
 document
@@ -80,6 +82,9 @@ function saveUserData() {
   localStorage.setItem("week_time", WEEK_TIME);
   localStorage.setItem("month_time", MONTH_TIME);
   localStorage.setItem("year_time", YEAR_TIME);
+
+  localStorage.setItem("user_week", CURRENT_WEEK);
+  localStorage.setItem("user_month", CURRENT_MONTH);
 }
 
 function loadUserData() {
@@ -97,6 +102,18 @@ function loadUserData() {
   WEEK_TIME = week_time ?? 0;
   MONTH_TIME = month_time ?? 0;
   YEAR_TIME = year_time ?? 0;
+
+  const user_week = localStorage.getItem("user_week");
+
+  if (user_week && CURRENT_WEEK !== user_week) {
+    WEEK_TIME = 0;
+  }
+
+  const user_month = localStorage.getItem("user_month");
+
+  if (user_month && CURRENT_MONTH !== user_month) {
+    WEEK_TIME = 0;
+  }
 }
 
 function loadInterfaceElements() {
@@ -134,10 +151,13 @@ function startTimer() {
 
 function collectTime() {
   WEEK_TIME = parseInt(TIMER_VALUE) + parseInt(WEEK_TIME);
+  MONTH_TIME = parseInt(TIMER_VALUE) + parseInt(MONTH_TIME);
+  YEAR_TIME = parseInt(TIMER_VALUE) + parseInt(YEAR_TIME);
 }
 
 function showCongrats() {
   alert("Congrats! +" + TIMER_VALUE + " minutes!");
+  console.log("done");
 }
 
 function getDisplaybleTimer(m = null, s = null) {
@@ -178,4 +198,24 @@ function loadSettings() {
     .setAttribute("value", TIMER_VALUE);
 }
 
-console.log("v1.0");
+function getWeekOfYear(date) {
+  const currentDate = typeof date === "object" ? date : new Date();
+  const januaryFirst = new Date(currentDate.getFullYear(), 0, 1);
+  const daysToNextMonday =
+    januaryFirst.getDay() === 1 ? 0 : (7 - januaryFirst.getDay()) % 7;
+  const nextMonday = new Date(
+    currentDate.getFullYear(),
+    0,
+    januaryFirst.getDate() + daysToNextMonday
+  );
+
+  return (
+    currentDate < nextMonday
+      ? 52
+      : currentDate > nextMonday
+      ? Math.ceil((currentDate - nextMonday) / (24 * 3600 * 1000) / 7)
+      : 1
+  ).toString();
+}
+
+console.log("v1.0.1");
