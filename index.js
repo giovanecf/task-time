@@ -140,6 +140,22 @@ function getDisplaybleTimer(m, s = null) {
   return m + ":" + s;
 }
 
+function autoLoadWithGetParam() {
+  const queryString = window.location.search;
+
+  const urlParams = new URLSearchParams(queryString);
+
+  const timer_value = urlParams.get("timer_value");
+
+  if (timer_value) {
+    TIMER_VALUE = parseInt(timer_value);
+    loadInterfaceElements();
+    onPlayPauseHandler();
+  }
+}
+
 loadUserData();
 
 loadInterfaceElements();
+
+autoLoadWithGetParam();
