@@ -149,6 +149,8 @@ function autoLoadWithGetParam() {
 
   if (timer_value) {
     TIMER_VALUE = parseInt(timer_value);
+    saveUserData();
+    loadUserData();
     loadInterfaceElements();
     onPlayPauseHandler();
   }
