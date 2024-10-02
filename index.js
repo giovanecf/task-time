@@ -23,8 +23,16 @@ document
 
 WEEK_TIME_EL.addEventListener("click", hackTime);
 
+loadUserData();
+
+loadInterfaceElements();
+
+autoLoadWithGetParam();
+
 function hackTime() {
   let time = prompt("New time in minutes:");
+
+  if (time === null || time === "" || isNaN(time)) return;
 
   WEEK_TIME = time;
 
@@ -91,8 +99,6 @@ function onPlayPauseHandler() {
     : "Play";
 }
 
-function saveTime() {}
-
 function saveUserData() {
   localStorage.setItem("timer_value", TIMER_VALUE);
 
@@ -155,9 +161,3 @@ function autoLoadWithGetParam() {
     onPlayPauseHandler();
   }
 }
-
-loadUserData();
-
-loadInterfaceElements();
-
-autoLoadWithGetParam();
