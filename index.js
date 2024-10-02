@@ -24,6 +24,9 @@ document
   .addEventListener("click", loadSettings);
 
 WEEK_TIME_EL.addEventListener("click", hackTime);
+
+Notification.requestPermission();
+
 /**
  * END SETUP
  *
@@ -128,6 +131,7 @@ function loadInterfaceElements() {
 
 function startTimer() {
   // Update the count down every 1 second
+
   var x = setInterval(function () {
     CURRENT_TIMER_IN_SECS--;
 
@@ -156,8 +160,49 @@ function collectTime() {
 }
 
 function showCongrats() {
-  alert("Congrats! +" + TIMER_VALUE + " minutes!");
-  console.log("done");
+  const title = "Congrats!";
+  const body = " +" + TIMER_VALUE + " minutes!";
+
+  audioNotification();
+
+  notify(title, body);
+}
+
+function audioNotification() {
+  document.getElementById("alarm_audio").play();
+}
+
+function notify(title, body) {
+  if (!("Notification" in window)) {
+    // Check if the browser supports notifications
+    alert("This browser does not support desktop notification");
+  } else if (Notification.permission === "granted") {
+    // Check whether notification permissions have already been granted;
+    // if so, create a notification
+    const notification = new Notification(title, {
+      body,
+      badge: "./badge.png",
+      icon: "./countdown.png",
+      silent: false,
+      vibrate: true,
+    });
+    // …
+  } else if (Notification.permission !== "denied") {
+    // We need to ask the user for permission
+    Notification.requestPermission().then((permission) => {
+      // If the user accepts, let's create a notification
+      if (permission === "granted") {
+        const notification = new Notification(title, {
+          body,
+          badge: "./badge.png",
+          icon: "./countdown.png",
+          silent: false,
+          vibrate: true,
+        });
+        // …
+      }
+    });
+  }
 }
 
 function getDisplaybleTimer(m = null, s = null) {
@@ -218,4 +263,4 @@ function getWeekOfYear(date) {
   ).toString();
 }
 
-console.log("v1.0.1");
+console.log("v1.0.2");
