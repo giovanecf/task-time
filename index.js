@@ -48,8 +48,10 @@ function saveSettings() {
 
   TIMER_VALUE = parseInt(timer_value);
 
+  TIMER_VALUE = parseInt(timer_value);
   saveUserData();
-
+  loadUserData();
+  onPlayPauseHandler({}, false);
   loadInterfaceElements();
 }
 
@@ -84,8 +86,9 @@ function startTimer() {
   return x;
 }
 
-function onPlayPauseHandler() {
-  HAS_STARTED = !HAS_STARTED;
+function onPlayPauseHandler(e, status = undefined) {
+  console.log(status);
+  HAS_STARTED = status === undefined ? !HAS_STARTED : status;
   if (HAS_STARTED) {
     TIMER = startTimer();
   } else {
