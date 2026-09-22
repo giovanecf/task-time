@@ -126,7 +126,7 @@ function loadInterfaceElements() {
   MONTH_TIME_EL.innerHTML = MONTH_TIME ? MONTH_TIME + "min" : "--";
   YEAR_TIME_EL.innerHTML = YEAR_TIME ? YEAR_TIME + "min" : "--";
 
-  document.title = "task time";
+  document.title = "Task Time";
 }
 
 function startTimer() {
