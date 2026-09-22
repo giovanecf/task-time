@@ -1,0 +1,84 @@
+name: Sensitive files approval
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: read
+  statuses: write
+
+jobs:
+  approval-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update sensitive-files approval status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const isPullRequestEvent = context.eventName === 'pull_request_target';
+            const isPullRequestComment =
+              context.eventName === 'issue_comment' &&
+              Boolean(context.payload.issue.pull_request);
+
+            if (!isPullRequestEvent && !isPullRequestComment) {
+              return;
+            }
+
+            const pull_number = isPullRequestEvent
+              ? context.payload.pull_request.number
+              : context.payload.issue.number;
+
+            const pullRequest = isPullRequestEvent
+              ? context.payload.pull_request
+              : (await github.rest.pulls.get({ owner, repo, pull_number })).data;
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number,
+              per_page: 100,
+            });
+            const sensitiveFiles = new Set(['index.css', 'index.js']);
+            const hasSensitiveChange = files.some(({ filename }) => sensitiveFiles.has(filename));
+
+            if (!hasSensitiveChange) {
+              if (isPullRequestEvent) {
+                await github.rest.repos.createCommitStatus({
+                  owner,
+                  repo,
+                  sha: pullRequest.head.sha,
+                  state: 'success',
+                  context: 'Sensitive files approval',
+                  description: 'Nenhum arquivo sensível foi alterado.',
+                });
+              }
+              return;
+            }
+
+            let approved = false;
+            if (isPullRequestComment) {
+              const repository = (await github.rest.repos.get({ owner, repo })).data;
+              const isRepositoryOwner = context.payload.comment.user.login === repository.owner.login;
+              const isApprovalCommand = context.payload.comment.body.trim() === '/approve-sensitive';
+              approved = isRepositoryOwner && isApprovalCommand;
+
+              if (isApprovalCommand && !isRepositoryOwner) {
+                core.warning('O comando de aprovação só pode ser usado pelo proprietário do repositório.');
+              }
+            }
+
+            await github.rest.repos.createCommitStatus({
+              owner,
+              repo,
+              sha: pullRequest.head.sha,
+              state: approved ? 'success' : 'failure',
+              context: 'Sensitive files approval',
+              description: approved
+                ? 'Alterações sensíveis aprovadas pelo proprietário.'
+                : 'Aguardando /approve-sensitive do proprietário do repositório.',
+              target_url: `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`,
+            });
